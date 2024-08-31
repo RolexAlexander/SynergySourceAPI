@@ -268,7 +268,6 @@ def update_vehicle(vehicle_id: UUID, vehicle: VehicleUpdate):
 
 @app.get("/ListAllVehicles/", response_model=List)
 def get_vehicles():
-    db = Database()
     vehicles = db.get_all_vehicles_with_drivers()
     if not vehicles:
         raise HTTPException(status_code=404, detail="No vehicles found")

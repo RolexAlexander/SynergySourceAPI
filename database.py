@@ -428,6 +428,7 @@ class Database:
                     vehicles.vehicle_type,
                     vehicles.license_plate,
                     vehicles.capacity,
+                    vehicles.people,
                     locations.latitude,
                     locations.longitude
                 FROM 
@@ -452,8 +453,9 @@ class Database:
                     "vehicle_type": row[1],
                     "license_plate": row[2],
                     "capacity": row[3],
-                    "latitude": row[4],
-                    "longitude": row[5]
+                    "people": row[4],
+                    "latitude": row[5],
+                    "longitude": row[6]
                 }
                 vehicles_list.append(vehicle_dict)
             return vehicles_list
