@@ -16,7 +16,7 @@ class Database:
                 database="postgres"
             )
             self.cursor = self.connection.cursor()
-            self.create_tables()
+            # self.create_tables()
             print("Connected to the database and tables created successfully")
         except (Exception, psycopg2.Error) as error:
             print("Error while connecting to PostgreSQL", error)
