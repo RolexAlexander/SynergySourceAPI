@@ -3,9 +3,19 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from uuid import UUID
 from typing import Optional, List, Dict
+from fastapi.middleware.cors import CORSMiddleware
 
 # init fast api app
 app = FastAPI()
+
+# Add the CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow requests from these origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Initialize the database
 db = Database()
