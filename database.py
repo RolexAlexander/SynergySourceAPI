@@ -149,11 +149,12 @@ class Database:
             ''',
             "vehicle_speed": '''
                 CREATE TABLE IF NOT EXISTS vehicle_speeds (
-                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                license_plate TEXT NOT NULL REFERENCES vehicles(license_plate),
-                speed DECIMAL(5, 2) NOT NULL,
-                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    license_plate TEXT NOT NULL REFERENCES vehicles(license_plate),
+                    speed DECIMAL(5, 2) NOT NULL,
+                    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT unique_license_plate UNIQUE (license_plate)
+                )
             ''',
         }
 
@@ -970,15 +971,20 @@ class Database:
 
     def log_speed(self, license_plate, speed):
         try:
-            insert_query = '''
-            INSERT INTO vehicle_speeds (license_plate, speed)
-            VALUES (%s, %s)
+            # Upsert query: if the license_plate already exists, update the speed; otherwise, insert a new entry.
+            upsert_query = '''
+            INSERT INTO vehicle_speeds (license_plate, speed, recorded_at)
+            VALUES (%s, %s, CURRENT_TIMESTAMP)
+            ON CONFLICT (license_plate) 
+            DO UPDATE SET speed = EXCLUDED.speed, recorded_at = EXCLUDED.recorded_at;
             '''
-            self.cursor.execute(insert_query, (license_plate, speed))
+            self.cursor.execute(upsert_query, (license_plate, speed))
             self.connection.commit()
         except Exception as e:
             self.connection.rollback()
             print(f"Error occurred: {e}")
+
+
 
     def get_vehicle_speeds(self, license_plate):
         try:
@@ -1000,13 +1006,13 @@ if __name__ == "__main__":
 
     # Example usage for customers
     # Create a customer
-    customer_id = db.create_customer(
-        name="John Doe",
-        email="johe@doqwe.com",
-        phone_number="2321234",
-        password="password123"
-    )
-    print(f"Customer created with ID: {customer_id}")
+    # customer_id = db.create_customer(
+    #     name="John Doe",
+    #     email="johe@doqwe.com",
+    #     phone_number="2321234",
+    #     password="password123"
+    # )
+    # print(f"Customer created with ID: {customer_id}")
 
     # # Read the customer details
     # customer_details = db.read_customer(customer_id)

@@ -2,7 +2,9 @@ from database import Database
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from uuid import UUID
+from datetime import datetime
 from typing import Optional, List, Dict
+import uuid
 from fastapi.middleware.cors import CORSMiddleware
 
 # init fast api app
@@ -135,7 +137,7 @@ class PaymentUpdate(BaseModel):
 class SpeedLog(BaseModel):
     license_plate: str
     speed: float
-    
+
 # Customer Endpoints
 
 @app.post("/customers/", response_model=UUID)
@@ -639,4 +641,9 @@ def get_vehicle_speeds(license_plate: str):
     speeds = db.get_vehicle_speeds(license_plate)
     if speeds is None:
         raise HTTPException(status_code=404, detail="Vehicle not found or no speed data available")
-    return speeds
+    return {
+        "id": speeds[0][0],
+        "license_plate": speeds[0][1],
+        "speed": speeds[0][2],
+        "recorded_at": speeds[0][3]
+    }
