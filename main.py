@@ -82,6 +82,60 @@ class VehicleUpdate(BaseModel):
 class UpdatePeopleRequest(BaseModel):
     license_plate: str
     people: int
+
+
+class Report(BaseModel):
+    reporter_first_name: str
+    reporter_last_name: str
+    license_number: str
+    description: str
+    report_type: str
+    driver_id: Optional[str] = None
+
+class EmergencyReport(BaseModel):
+    reporter_first_name: str
+    reporter_last_name: str
+    license_plate: str
+    severity_level: str
+    description: Optional[str] = None
+    ratings: Optional[str] = None
+    organization_id: Optional[str] = None
+
+class Ride(BaseModel):
+    pickup_location: str
+    dropoff_location: str
+    ride_date: str
+    ride_time: str
+    number_of_passengers: int
+    vehicle_type: str
+    license_plate: str
+    organization_id: str
+    is_completed: Optional[bool] = False
+    is_in_progress: Optional[bool] = False
+
+class Hail(BaseModel):
+    driver_license: str
+    latitude: float
+    longitude: float
+
+class Payment(BaseModel):
+    customer_id: str
+    driver_id: str
+    amount: float
+    pickup_location: str
+    dropoff_location: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+class PaymentUpdate(BaseModel):
+    amount: Optional[float] = None
+    pickup_location: Optional[str] = None
+    dropoff_location: Optional[str] = None
+
+class SpeedLog(BaseModel):
+    license_plate: str
+    speed: float
+    
 # Customer Endpoints
 
 @app.post("/customers/", response_model=UUID)
@@ -281,3 +335,308 @@ def delete_vehicle(vehicle_id: UUID):
 @app.put("/vehicles/update_people/")
 def update_people(vehicles: UpdatePeopleRequest):
     return db.update_people_in_vehicle(vehicles.license_plate, vehicles.people)
+
+@app.post("/reports/", response_model=str)
+def create_report(report: Report):
+    report_id = db.create_report(
+        report.reporter_first_name,
+        report.reporter_last_name,
+        report.license_number,
+        report.description,
+        report.report_type,
+        report.driver_id
+    )
+    if report_id:
+        return {"id": report_id}
+    raise HTTPException(status_code=500, detail="Error creating report")
+
+@app.get("/reports/{report_id}", response_model=dict)
+def get_report_by_id(report_id: str):
+    report = db.get_report_by_id(report_id)
+    if report:
+        return report
+    raise HTTPException(status_code=404, detail="Report not found")
+
+@app.put("/reports/{report_id}", response_model=str)
+def update_report(report_id: str, description: Optional[str] = None, report_type: Optional[str] = None):
+    updated_id = db.update_report(report_id, description, report_type)
+    if updated_id:
+        return {"id": updated_id}
+    raise HTTPException(status_code=500, detail="Error updating report")
+
+@app.delete("/reports/{report_id}")
+def delete_report(report_id: str):
+    db.delete_report(report_id)
+    return {"detail": "Report deleted"}
+
+@app.post("/emergency-reports/", response_model=str)
+def create_emergency_report(emergency_report: EmergencyReport):
+    emergency_id = db.create_emergency_report(
+        emergency_report.reporter_first_name,
+        emergency_report.reporter_last_name,
+        emergency_report.license_plate,
+        emergency_report.severity_level,
+        emergency_report.description,
+        emergency_report.ratings,
+        emergency_report.organization_id
+    )
+    if emergency_id:
+        return {"id": emergency_id}
+    raise HTTPException(status_code=500, detail="Error creating emergency report")
+
+@app.get("/emergency-reports/{emergency_id}", response_model=dict)
+def get_emergency_report_by_id(emergency_id: str):
+    emergency_report = db.get_emergency_report_by_id(emergency_id)
+    if emergency_report:
+        return emergency_report
+    raise HTTPException(status_code=404, detail="Emergency report not found")
+
+@app.put("/emergency-reports/{emergency_id}", response_model=str)
+def update_emergency_report(emergency_id: str, status: Optional[str] = None, resolved_at: Optional[str] = None):
+    updated_id = db.update_emergency_report(emergency_id, status, resolved_at)
+    if updated_id:
+        return {"id": updated_id}
+    raise HTTPException(status_code=500, detail="Error updating emergency report")
+
+@app.delete("/emergency-reports/{emergency_id}")
+def delete_emergency_report(emergency_id: str):
+    db.delete_emergency_report(emergency_id)
+    return {"detail": "Emergency report deleted"}
+
+@app.post("/rides/", response_model=str)
+def create_ride(ride: Ride):
+    ride_id = db.create_ride(
+        ride.pickup_location,
+        ride.dropoff_location,
+        ride.ride_date,
+        ride.ride_time,
+        ride.number_of_passengers,
+        ride.vehicle_type,
+        ride.license_plate,
+        ride.organization_id,
+        ride.is_completed,
+        ride.is_in_progress
+    )
+    if ride_id:
+        return {"id": ride_id}
+    raise HTTPException(status_code=500, detail="Error creating ride")
+
+@app.get("/rides/{ride_id}", response_model=dict)
+def get_ride_by_id(ride_id: str):
+    ride = db.get_ride_by_id(ride_id)
+    if ride:
+        return ride
+    raise HTTPException(status_code=404, detail="Ride not found")
+
+@app.put("/rides/{ride_id}", response_model=str)
+def update_ride(ride_id: str, is_completed: Optional[bool] = None, is_in_progress: Optional[bool] = None, completed_at: Optional[str] = None):
+    updated_id = db.update_ride(ride_id, is_completed, is_in_progress, completed_at)
+    if updated_id:
+        return {"id": updated_id}
+    raise HTTPException(status_code=500, detail="Error updating ride")
+
+@app.delete("/rides/{ride_id}")
+def delete_ride(ride_id: str):
+    db.delete_ride(ride_id)
+    return {"detail": "Ride deleted"}
+
+@app.post("/hails/", response_model=str)
+def create_hail(hail: Hail):
+    hail_id = db.create_hail(hail.driver_license, hail.latitude, hail.longitude)
+    if hail_id:
+        return {"id": hail_id}
+    raise HTTPException(status_code=500, detail="Error creating hail")
+
+@app.get("/hails/{hail_id}", response_model=dict)
+def get_hail_by_id(hail_id: str):
+    hail = db.get_hail_by_id(hail_id)
+    if hail:
+        return hail
+    raise HTTPException(status_code=404, detail="Hail not found")
+
+@app.put("/hails/{hail_id}", response_model=str)
+def update_hail(hail_id: str, latitude: Optional[float] = None, longitude: Optional[float] = None):
+    updated_id = db.update_hail(hail_id, latitude, longitude)
+    if updated_id:
+        return {"id": updated_id}
+    raise HTTPException(status_code=500, detail="Error updating hail")
+
+@app.delete("/hails/{hail_id}")
+def delete_hail(hail_id: str):
+    db.delete_hail(hail_id)
+    return {"detail": "Hail deleted"}
+
+@app.post("/payments/", response_model=str)
+def create_payment(payment: Payment):
+    payment_id = db.create_payment(
+        payment.customer_id,
+        payment.driver_id,
+        payment.amount,
+        payment.pickup_location,
+        payment.dropoff_location,
+        payment.latitude,
+        payment.longitude
+    )
+    if payment_id:
+        return {"id": payment_id}
+    raise HTTPException(status_code=500, detail="Error creating payment")
+
+@app.get("/payments/{payment_id}", response_model=dict)
+def get_payment_by_id(payment_id: str):
+    payment = db.get_payment_by_id(payment_id)
+    if payment:
+        return payment
+    raise HTTPException(status_code=404, detail="Payment not found")
+
+@app.put("/payments/{payment_id}")
+def update_payment(payment_id: int, update: PaymentUpdate):
+    try:
+        # Replace with actual database call
+        updated_payment_id = db.update_payment(payment_id, update.amount, update.pickup_location, update.dropoff_location)
+        return {"payment_id": updated_payment_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.delete("/payments/{payment_id}")
+def delete_payment(payment_id: int):
+    try:
+        db.delete_payment(payment_id)
+        return {"message": "Payment deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/reports/{organization_id}")
+def list_reports_by_organization(organization_id: int):
+    try:
+        reports = db.list_reports_by_organization(organization_id)
+        return {"reports": reports}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/drivers/{organization_id}")
+def list_drivers_by_organization(organization_id: int):
+    try:
+        drivers = db.list_drivers_by_organization(organization_id)
+        return {"drivers": drivers}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/all_info")
+def list_all_info():
+    try:
+        all_info = db.list_all_organizations_drivers_vehicles_locations()
+        return {"info": all_info}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/rides")
+def list_rides_by_user_driver_organization(
+    user_id: Optional[int] = None,
+    driver_id: Optional[int] = None,
+    organization_id: Optional[int] = None
+):
+    try:
+        rides = db.list_rides_by_user_driver_organization(user_id, driver_id, organization_id)
+        return {"rides": rides}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/available_rides")
+def list_available_rides():
+    try:
+        rides = db.list_available_rides()
+        return {"rides": rides}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/dispatched_rides")
+def list_dispatched_rides():
+    try:
+        rides = db.list_dispatched_rides()
+        return {"rides": rides}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/hail")
+def hail_by_customer_driver_organization(
+    customer_id: Optional[int] = None,
+    driver_id: Optional[int] = None,
+    organization_id: Optional[int] = None
+):
+    try:
+        hails = db.hail_by_customer_driver_organization(customer_id, driver_id, organization_id)
+        return {"hails": hails}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/payment_history")
+def list_payment_history():
+    try:
+        payments = db.list_payment_history()
+        return {"payments": payments}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/locations")
+def get_location_by_driver_id_or_license(
+    driver_id: Optional[int] = None,
+    license_number: Optional[str] = None
+):
+    try:
+        locations = db.get_location_by_driver_id_or_license(driver_id, license_number)
+        return {"locations": locations}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/vehicle_status")
+def get_vehicle_status(
+    vehicle_id: Optional[int] = None,
+    license_plate: Optional[str] = None
+):
+    try:
+        vehicles = db.get_vehicle_status(vehicle_id, license_plate)
+        return {"vehicles": vehicles}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/driver_details")
+def get_driver_details(
+    driver_id: Optional[int] = None,
+    license_number: Optional[str] = None
+):
+    try:
+        drivers = db.get_driver_details(driver_id, license_number)
+        return {"drivers": drivers}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/organizations/{organization_id}")
+def get_organization_details(organization_id: int):
+    try:
+        organization = db.get_organization_details(organization_id)
+        return {"organization": organization}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.get("/active_rides/{organization_id}")
+def get_active_rides_by_organization(organization_id: int):
+    try:
+        rides = db.get_active_rides_by_organization(organization_id)
+        return {"rides": rides}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error occurred: {e}")
+
+@app.post("/log_speed/")
+def log_vehicle_speed(speed_log: SpeedLog):
+    try:
+        db.log_speed(speed_log.license_plate, speed_log.speed)
+        return {"message": "Speed logged successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/vehicle_speeds/{license_plate}")
+def get_vehicle_speeds(license_plate: str):
+    speeds = db.get_vehicle_speeds(license_plate)
+    if speeds is None:
+        raise HTTPException(status_code=404, detail="Vehicle not found or no speed data available")
+    return speeds

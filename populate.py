@@ -72,10 +72,10 @@ if __name__ == "__main__":
     db = Database()  # Assuming your Database class is already defined
     populator = DatabasePopulator(db)
 
-    # populator.populate_customers('./data/customers.json')
-    # populator.populate_organizations('./data/organisations.json')
-    # populator.populate_drivers('./data/drivers.json')
-    # populator.populate_locations('./data/locations.json')
-    # populator.populate_vehicles('./data/vehicles.json')
+    populator.populate_customers('./data/customers.json')
+    populator.populate_organizations('./data/organisations.json')
+    populator.populate_drivers('./data/drivers.json')
+    populator.populate_locations('./data/locations.json')
+    populator.populate_vehicles('./data/vehicles.json')
 
     db.close()
